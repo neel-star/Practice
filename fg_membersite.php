@@ -1,10 +1,26 @@
 <?PHP
 /*
-    Registration/Login script from HTML Form V1.0
+    Registration/Login script from HTML Form Guide
+    V1.0
+
+    This program is free software published under the
+    terms of the GNU Lesser General Public License.
+    http://www.gnu.org/copyleft/lesser.html
+    
+
+This program is distributed in the hope that it will
+be useful - WITHOUT ANY WARRANTY; without even the
+implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE.
+
+For updates, please visit:
+http://www.html-form-guide.com/php-form/php-registration-form.html
+http://www.html-form-guide.com/php-form/php-login-form.html
 
 */
 require_once("class.phpmailer.php");
 require_once("formvalidator.php");
+require_once("PHPMailer/PHPMailerAutoload.php");
 
 class FGMembersite
 {
@@ -52,6 +68,7 @@ class FGMembersite
     }
     
     //-------Main Operations ----------------------
+
     function RegisterUser()
     {
         if(!isset($_POST['submitted']))
@@ -282,11 +299,7 @@ class FGMembersite
         return htmlentities($_POST[$value_name]);
     }
     
-    function RedirectToURL($url)
-    {
-        header("Location: $url");
-        exit;
-    }
+
     
     function GetSpamTrapInputName()
     {
@@ -605,41 +618,43 @@ class FGMembersite
         $formvars['username'] = $this->Sanitize($_POST['username']);
         $formvars['password'] = $this->Sanitize($_POST['password']);
     }
-    
-    function SendUserConfirmationEmail(&$formvars)
-    {
-        echo $formvars;
-        $mailer = new PHPMailer();
-        
-        $mailer->CharSet = 'utf-8';
-        
-        $mailer->AddAddress($formvars['email'],$formvars['name']);
-        
-        $mailer->Subject = "Your registration with ".$this->sitename;
+function SendUserConfirmationEmail(&$formvars)
+{
+$mailer = new PHPMailer();
+$mailer->isSMTP();                                   // Set mailer to use SMTP
+$mailer->Host = 'smtp.gmail.com';                    // Specify main and backup SMTP servers
+$mailer->SMTPAuth = true;                            // Enable SMTP authentication
+$mailer->Username = 'XXXXXXXXXXXXX@gmail.com';          // SMTP username
+$mailer->Password = 'XXXXXXXXXXXXX'; // SMTP password
+$mailer->SMTPSecure = 'tls';                         // Enable TLS encryption, `ssl` also accepted
+$mailer->Port = 587;     
+$mailer->CharSet = 'utf-8';
+$mailer->AddAddress($formvars['email'],$formvars['name']);
+$mailer->Subject = "Your registration with ".$this->sitename;
+$mailer->From = $this->GetFromAddress();        
+$confirmcode = $formvars['confirmcode'];
+$confirm_url = $this->GetAbsoluteURLFolder().'/confirmreg.php?code='.$confirmcode;
+$mailer->Body ="Hello ".$formvars['name']."\r\n\r\n".
+"Thanks for your registration with ".$this->sitename."\r\n".    
+"Please click the link below to confirm your registration.\r\n".
+"$confirm_url\r\n".
+"\r\n".
+"Regards,\r\n".
+"Neelay.Com\r\n".
+$this->sitename;
+if(!$mailer->Send())
+{
+$this->HandleError("Failed sending registration confirmation email.");
+return false;
+}
+return true;
+}
+function RedirectToURL($url)
+{
+header("Location:$url");
+exit;
+}
 
-        $mailer->From = $this->GetFromAddress();        
-        
-        $confirmcode = $formvars['confirmcode'];
-        echo  $confirmcode;
-        $confirm_url = $this->GetAbsoluteURLFolder().'/confirmreg.php?code='.$confirmcode;
-        echo $confirm_url;
-        echo $formvars['name'];
-        $mailer->Body ="Hello ".$formvars['name']."\r\n\r\n".
-        "Thanks for your registration with ".$this->sitename."\r\n".
-        "Please click the link below to confirm your registration.\r\n".
-        "$confirm_url\r\n".
-        "\r\n".
-        "Regards,\r\n".
-        "Webmaster\r\n".
-        $this->sitename;
-
-        if(!$mailer->Send())
-        {
-            $this->HandleError("Failed sending registration confirmation email.");
-            return false;
-        }
-        return true;
-    }
     function GetAbsoluteURLFolder()
     {
         $scriptFolder = (isset($_SERVER['HTTPS']) && ($_SERVER['HTTPS'] == 'on')) ? 'https://' : 'http://';
@@ -852,4 +867,4 @@ class FGMembersite
         return $str;
     }    
 }
-?>
+?>                                                                                                                                                                     
